@@ -32,17 +32,21 @@ const buildBoardFromGameState = (gameState) => {
 };
 
 const isCellEmpty = (cellLocation, board) => {
-  let foundCell = true;
+  let cellEmpty = null;
   _.forEach(board, (cells) => {
     _.forEach(cells, (cell) => {
       if (cell.location.x === cellLocation.x
-        && cell.location.y === cellLocation.y && cell.piece != null) {
-        foundCell = false;
+        && cell.location.y === cellLocation.y) {
+        cellEmpty = cell.piece == null;
       }
     });
   });
 
-  return foundCell;
+  if (cellEmpty === null) {
+    throw new Error('Cell not found');
+  }
+
+  return cellEmpty;
 };
 
 const isValidCell = (loc) => {

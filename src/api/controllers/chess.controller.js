@@ -15,9 +15,11 @@ exports.getMove = async (req, res, next) => {
     const { fen } = req.body;
     const gameState = chess.fenToPosition(fen);
 
+    console.log(JSON.stringify(gameState));
     // Build board from FEN
     gameState.board = chessBoardService.buildBoardFromGameState(gameState);
 
+    console.log(JSON.stringify(gameState.board));
     // Get game moves possible
     const test = gameState.board[7][2].piece.getAvailableMoves(gameState.board);
 
