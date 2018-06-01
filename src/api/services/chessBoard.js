@@ -2,10 +2,10 @@ const _ = require('lodash');
 const ChessPiece = require('../models/chessPiece');
 const PieceDirections = require('../models/pieceDirections');
 
-const buildBoardFromGameState = (gameState) => {
+const buildBoardFromGameState = (board) => {
   const array = [];
   let currentRow = 0;
-  gameState.board.forEach((tile, index) => {
+  board.forEach((tile, index) => {
     if (index !== 0 && index % 8 === 0) {
       currentRow++;
     }

@@ -21,7 +21,7 @@ const getPieceDirections = (type, color = 'W') => {
       }
       return directions.pawn;
     }
-    default: return [];
+    default: throw new Error('Unable to get piece directions. Piece does not exist.');
   }
 };
 
