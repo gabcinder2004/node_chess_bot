@@ -3,7 +3,7 @@
 const httpStatus = require('http-status');
 const chess = require('chess-rules');
 
-const chessBoardService = require('../services/chessBoard');
+const ChessBoard = require('../models/chessBoard');
 
 /**
  * Get next move
@@ -16,17 +16,27 @@ exports.getMove = async (req, res, next) => {
     const gameState = chess.fenToPosition(fen);
 
     // Build board from FEN
-    gameState.board = chessBoardService.buildBoardFromGameState(gameState.board);
+    // gameState.board = chessBoardService.buildBoardFromGameState(gameState.board);
 
-    // Get game moves possible
-    const test = gameState.board[0][3].piece.getAvailableMoves(gameState.board);
+    const board = new ChessBoard(gameState);
 
-    // Get board value for each move?
+    const bestMove = board.determineBestMove(1, gameState.turn);
+
+    // For each possible move:
+    // Are we checked?
+    // Can we check them?
+    // If we make the move, what is the best move opponent can make?
+    // Compare boardvalues after opponent makes a move
+
+
     // Minimax tree
 
     res.status(httpStatus.OK);
-    res.json({ message: 'Success!', result: test });
+    res.json({
+      message: 'Success!', bestMove,
+    });
   } catch (error) {
     next(error);
   }
 };
+

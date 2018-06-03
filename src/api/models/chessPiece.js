@@ -21,34 +21,49 @@ module.exports = class ChessPiece {
     return { x: newX, y: newY };
   }
 
+  static getPieceValue(isOpponentPiece, type) {
+    let value = 0;
+    switch (type) {
+      case 'P': value = 10; break;
+      case 'N': value = 30; break;
+      case 'B': value = 30; break;
+      case 'R': value = 50; break;
+      case 'Q': value = 90; break;
+      case 'K': value = 900; break;
+      default:
+    }
+
+    if (isOpponentPiece) return value * -1;
+    return value;
+  }
+
   isSpecialPiece() { return (this.type === 'K' || this.type === 'P' || this.type === 'N'); }
 
   isKillableByPawn(curLocation, direction, board) {
-    const chessBoard = require('../services/chessBoard'); // eslint-disable-line global-require
     const newLocation = ChessPiece.getNextLocation(curLocation, direction);
-    const newLocationValid = chessBoard.isValidCell(newLocation);
+    const newLocationValid = board.isValidCell(newLocation);
     if (!newLocationValid) { return; }
-    const newLocationEmpty = chessBoard.isCellEmpty(newLocation, board);
+    const newLocationEmpty = board.isCellEmpty(newLocation, board.currentTurnState);
     const newLocationHasEnemy = (!newLocationEmpty
-      && chessBoard.getCell(newLocation, board).piece.color !== this.color);
+      && board.getCell(newLocation, board.currentTurnState).piece.color !== this.color);
     if (newLocationHasEnemy) {
-      this.availableMoves.push({ from: curLocation, to: newLocation });
+      this.availableMoves.push({
+        from: curLocation, to: newLocation, moveType: 'KILL', movingPiece: this.type,
+      });
     }
   }
 
   addMoveIfValid(curLocation, direction, board, moveOnce) {
-    const chessBoard = require('../services/chessBoard'); // eslint-disable-line global-require
-
     const newLocation = ChessPiece.getNextLocation(curLocation, direction);
-    const cellValid = chessBoard.isValidCell(newLocation);
+    const cellValid = board.isValidCell(newLocation);
 
     if (!cellValid) {
       return;
     }
 
-    const cellEmpty = chessBoard.isCellEmpty(newLocation, board);
+    const cellEmpty = board.isCellEmpty(newLocation, board.currentTurnState);
     const cellHasEnemy = !cellEmpty
-    && chessBoard.getCell(newLocation, board).piece.color !== this.color;
+    && board.getCell(newLocation, board.currentTurnState).piece.color !== this.color;
 
     if (this.type === 'P') {
       if (this.color === 'B') {
@@ -62,10 +77,12 @@ module.exports = class ChessPiece {
 
     // If cell is empty or has an enemy on it, it is an available move
     if (cellValid && (cellEmpty || cellHasEnemy)) {
-      this.availableMoves.push({ from: { x: this.x, y: this.y }, to: newLocation, moveType: cellHasEnemy ? 'KILL' : 'MOVE' });
+      this.availableMoves.push({
+        from: { x: this.x, y: this.y }, to: newLocation, moveType: cellHasEnemy ? 'KILL' : 'MOVE', movingPiece: this.type,
+      });
 
       if (!moveOnce && !cellHasEnemy) {
-        this.addMoveIfValid(newLocation, direction, false);
+        this.addMoveIfValid(newLocation, direction, board, false);
       }
     }
   }

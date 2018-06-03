@@ -262,4 +262,158 @@ describe('ChessPiece.js', () => {
       expect(piece.availableMoves.length).to.be.equal(0);
     });
   });
+
+  describe('addMoveIfValid()', () => {
+    it('Valid Move - Not Pawn', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(false);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'W' } });
+
+      const piece = new ChessPiece(1, 1, [], 'K', 'B');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, true);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(1);
+      expect(piece.availableMoves[0].from.x).to.be.equal(curLocation.x);
+      expect(piece.availableMoves[0].from.y).to.be.equal(curLocation.y);
+      expect(piece.availableMoves[0].to.x).to.be.equal(2);
+      expect(piece.availableMoves[0].to.y).to.be.equal(2);
+      expect(piece.availableMoves[0].moveType).to.be.equal('KILL');
+    });
+
+    it('Valid Move - Black Pawn', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(false);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'W' } });
+
+      const piece = new ChessPiece(1, 1, [], 'P', 'B');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, true);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(3);
+      expect(piece.availableMoves[0].from.x).to.be.equal(curLocation.x);
+      expect(piece.availableMoves[0].from.y).to.be.equal(curLocation.y);
+      expect(piece.availableMoves[0].to.x).to.be.equal(2);
+      expect(piece.availableMoves[0].to.y).to.be.equal(2);
+    });
+
+    it('Valid Move - White Pawn', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(false);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'B' } });
+
+      const piece = new ChessPiece(1, 1, [], 'P', 'W');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, true);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(3);
+      expect(piece.availableMoves[0].from.x).to.be.equal(curLocation.x);
+      expect(piece.availableMoves[0].from.y).to.be.equal(curLocation.y);
+      expect(piece.availableMoves[0].to.x).to.be.equal(2);
+      expect(piece.availableMoves[0].to.y).to.be.equal(2);
+    });
+
+    it('Invalid Move - Cell invalid', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(false);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(false);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'B' } });
+
+      const piece = new ChessPiece(1, 1, [], 'P', 'W');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, true);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(0);
+    });
+
+    it('Valid move - cell empty', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(true);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'W' } });
+
+      const piece = new ChessPiece(1, 1, [], 'P', 'W');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, true);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(1);
+    });
+
+    it('Valid move - moveOnce false and cellHasEnemy false', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const direction = [1, 1];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(false);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'B' } });
+
+      const piece = new ChessPiece(1, 1, [], 'K', 'W');
+      // Act
+      piece.addMoveIfValid(curLocation, direction, board, false);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(1);
+    });
+  });
+
+  describe('getAvailableMoves()', () => {
+    it('Has moves', () => {
+      // Arrange
+      const board = [];
+      const curLocation = { x: 1, y: 1 };
+      const moveDirections = [[1, 1]];
+
+      sandbox.stub(ChessPiece, 'getNextLocation').returns({ x: 2, y: 2 });
+      sandbox.stub(ChessBoard, 'isValidCell').returns(true);
+      sandbox.stub(ChessBoard, 'isCellEmpty').returns(true);
+      sandbox.stub(ChessBoard, 'getCell').returns({ piece: { color: 'W' } });
+
+      const piece = new ChessPiece(curLocation.x, curLocation.y, moveDirections, 'P', 'B');
+      // Act
+      piece.getAvailableMoves(board);
+
+      // Assert
+      expect(piece.availableMoves.length).to.be.equal(1);
+      expect(piece.availableMoves[0].from.x).to.be.equal(curLocation.x);
+      expect(piece.availableMoves[0].from.y).to.be.equal(curLocation.y);
+      expect(piece.availableMoves[0].to.x).to.be.equal(2);
+      expect(piece.availableMoves[0].to.y).to.be.equal(2);
+    });
+  });
 });
