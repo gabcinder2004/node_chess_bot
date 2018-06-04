@@ -4,17 +4,18 @@ const PieceInfo = require('../models/pieceInfo');
 
 module.exports = class ChessBoard {
   constructor(gameState, cloneBoard) {
-    if (cloneBoard) {
-      this.currentTurnState = cloneBoard.currentTurnState;
-      this.currentTurn = cloneBoard.currentTurn;
-      this.check = cloneBoard.check;
-      this.castlingFlags = cloneBoard.castlingFlags;
-    } else {
-      this.buildBoardFromGameState(gameState.board);
-      this.currentTurn = gameState.turn;
-      this.check = gameState.check ? gameState.turn : null;
-      this.castlingFlags = gameState.castlingFlags;
-    }
+    // if (cloneBoard) {
+    //   this.currentTurnState = _.cloneDeep(cloneBoard.currentTurnState);
+    //   this.cleanClonedChessPieces();
+    //   this.currentTurn = cloneBoard.currentTurn;
+    //   this.check = cloneBoard.check;
+    //   this.castlingFlags = cloneBoard.castlingFlags;
+    // } else {
+    this.buildBoardFromGameState(gameState.board);
+    this.currentTurn = gameState.turn;
+    this.check = gameState.check ? gameState.turn : null;
+    this.castlingFlags = gameState.castlingFlags;
+    // }
     this.xMinBound = 0;
     this.xMaxBound = 7;
     this.yMinBound = 0;
@@ -22,7 +23,19 @@ module.exports = class ChessBoard {
   }
 
   clone() {
-    return new ChessBoard(null, this);
+    const clonedBoard = _.cloneDeep(this);
+    clonedBoard.cleanClonedChessPieces();
+    return clonedBoard;
+  }
+
+  cleanClonedChessPieces() {
+    _.forEach(this.currentTurnState, (cells) => {
+      _.forEach(cells, (cell) => {
+        if (cell.piece) {
+          cell.piece.availableMoves = [];
+        }
+      });
+    });
   }
 
   makeMove(move) {
@@ -123,10 +136,14 @@ module.exports = class ChessBoard {
     _.forEach(this.currentTurnState, (cells) => {
       _.forEach(cells, (cell) => {
         if (cell.piece) {
-          boardValue += ChessPiece.getPieceValue(
-            cell.piece.color !== color,
-            cell.piece.type,
-          );
+          const pieceLocationValue = PieceInfo.getTileValues(cell.piece.type, cell.piece.color)[cell.location.x][cell.location.y];
+          let pieceValue = pieceLocationValue + ChessPiece.getPieceValue(cell.piece.type);
+
+          if (cell.piece.color !== color) {
+            pieceValue *= -1;
+          }
+
+          boardValue += pieceValue;
         }
       });
     });
@@ -134,24 +151,53 @@ module.exports = class ChessBoard {
     return boardValue;
   }
 
-  determineBestMove(depth, color) {
+  determineBestMove(depth, color, onceFlag) {
     const moves = this.getAllAvailableMovesForColor(color);
     const oldBoardValue = this.getBoardValueForColor(color);
-    let bestMove = { move: null, oldBoardValue, boardValue: -9999 };
+    let opponentBestMoveRightNow = null;
+    if (onceFlag) {
+      opponentBestMoveRightNow = this.determineBestMove(0, color === 'W' ? 'B' : 'W', false);
+      opponentBestMoveRightNow.boardValue *= -1;
+    }
+    let bestMove = { move: null, oldBoardValue, boardValue: -99999 };
     _.forEach(moves, (move) => {
-      const cloneBoard = _.cloneDeep(this);
+      const cloneBoard = this.clone();
+
       cloneBoard.makeMove(move);
       const boardValue = cloneBoard.getBoardValueForColor(color);
 
+      // if (depth === 0 && move.movingPiece === 'K' && onceFlag) {
+      //   const opponentBestMove = cloneBoard.determineBestMove(0, color === 'W' ? 'B' : 'W', false);
+      //   if (opponentBestMove.boardValue * -1 < boardValue) {
+      //     return;
+      //   }
+      // }
+
       if (depth !== 0 && boardValue > bestMove.boardValue) {
-        const opponentBestMove = cloneBoard.determineBestMove(depth - 1, color === 'W' ? 'B' : 'W');
+        const opponentBestMove = cloneBoard.determineBestMove(depth - 1, color === 'W' ? 'B' : 'W', true);
+
+        if (depth === 3 && move.movingPiece === 'N' && move.from.x === 1 && move.from.y === 7) {
+          const test = 1 + 1;
+        }
 
         opponentBestMove.boardValue *= -1;
-        if (opponentBestMove.boardValue >= oldBoardValue && opponentBestMove.boardValue >= bestMove.boardValue) {
-          bestMove = { move, boardValue: opponentBestMove.boardValue, oldBoardValue };
+        if ((opponentBestMove.boardValue > oldBoardValue
+           && opponentBestMove.boardValue > bestMove.boardValue)
+           ||
+           (opponentBestMove.boardValue > opponentBestMoveRightNow.boardValue
+            && opponentBestMove.boardValue > bestMove.boardValue)
+        // && opponentBestMove.boardValue > bestMove.boardValue)
+        ) {
+          // const futureMoves = opponentBestMove.futureMoves;
+          // futureMoves.push(opponentBestMove);
+          bestMove = {
+            move, boardValue: opponentBestMove.boardValue, oldBoardValue,
+          };
         }
       } else if (boardValue > bestMove.boardValue) {
-        bestMove = { move, boardValue, oldBoardValue };
+        bestMove = {
+          move, boardValue, oldBoardValue,
+        };
       }
     });
 

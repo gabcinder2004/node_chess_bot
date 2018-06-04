@@ -4,7 +4,6 @@ const httpStatus = require('http-status');
 const chess = require('chess-rules');
 
 const ChessBoard = require('../models/chessBoard');
-
 /**
  * Get next move
  * @public
@@ -20,7 +19,7 @@ exports.getMove = async (req, res, next) => {
 
     const board = new ChessBoard(gameState);
 
-    const bestMove = board.determineBestMove(1, gameState.turn);
+    const bestMove = board.determineBestMove(3, gameState.turn, true);
 
     // For each possible move:
     // Are we checked?

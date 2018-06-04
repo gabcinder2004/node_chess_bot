@@ -21,20 +21,17 @@ module.exports = class ChessPiece {
     return { x: newX, y: newY };
   }
 
-  static getPieceValue(isOpponentPiece, type) {
-    let value = 0;
+  static getPieceValue(type) {
     switch (type) {
-      case 'P': value = 10; break;
-      case 'N': value = 30; break;
-      case 'B': value = 30; break;
-      case 'R': value = 50; break;
-      case 'Q': value = 90; break;
-      case 'K': value = 900; break;
+      case 'P': return 100;
+      case 'N': return 300;
+      case 'B': return 300;
+      case 'R': return 500;
+      case 'Q': return 900;
+      case 'K': return 9000;
       default:
+        throw new Error('Unknown Piece Type');
     }
-
-    if (isOpponentPiece) return value * -1;
-    return value;
   }
 
   isSpecialPiece() { return (this.type === 'K' || this.type === 'P' || this.type === 'N'); }
@@ -67,9 +64,15 @@ module.exports = class ChessPiece {
 
     if (this.type === 'P') {
       if (this.color === 'B') {
+        if (curLocation.y === 6 && direction[1] !== -2) {
+          this.addMoveIfValid(curLocation, [0, -2], board, true);
+        }
         this.isKillableByPawn(curLocation, [1, -1], board);
         this.isKillableByPawn(curLocation, [-1, -1], board);
       } else {
+        if (curLocation.y === 1 && direction[1] !== 2) {
+          this.addMoveIfValid(curLocation, [0, 2], board, true);
+        }
         this.isKillableByPawn(curLocation, [1, 1], board);
         this.isKillableByPawn(curLocation, [-1, 1], board);
       }
