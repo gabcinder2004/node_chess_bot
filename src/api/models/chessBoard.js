@@ -45,8 +45,6 @@ module.exports = class ChessBoard {
     toCell.piece = fromCell.piece;
 
     if (fromCell.piece === null) {
-      console.log(move);
-      console.log(this.currentTurnState);
       throw new Error('Trying to move a piece that doesnt exist');
     }
 
@@ -137,7 +135,7 @@ module.exports = class ChessBoard {
       _.forEach(cells, (cell) => {
         if (cell.piece) {
           const pieceLocationValue = PieceInfo.getTileValues(cell.piece.type, cell.piece.color)[cell.location.x][cell.location.y];
-          let pieceValue = pieceLocationValue + ChessPiece.getPieceValue(cell.piece.type);
+          let pieceValue = 0 + ChessPiece.getPieceValue(cell.piece.type);
 
           if (cell.piece.color !== color) {
             pieceValue *= -1;
@@ -173,30 +171,26 @@ module.exports = class ChessBoard {
       //   }
       // }
 
-      if (depth !== 0 && boardValue > bestMove.boardValue) {
+      if (depth !== 0 && boardValue >= bestMove.boardValue && boardValue >= oldBoardValue && boardValue >= opponentBestMoveRightNow.boardValue) {
         const opponentBestMove = cloneBoard.determineBestMove(depth - 1, color === 'W' ? 'B' : 'W', true);
 
-        if (depth === 3 && move.movingPiece === 'N' && move.from.x === 1 && move.from.y === 7) {
-          const test = 1 + 1;
-        }
-
         opponentBestMove.boardValue *= -1;
-        if ((opponentBestMove.boardValue > oldBoardValue
-           && opponentBestMove.boardValue > bestMove.boardValue)
-           ||
-           (opponentBestMove.boardValue > opponentBestMoveRightNow.boardValue
-            && opponentBestMove.boardValue > bestMove.boardValue)
-        // && opponentBestMove.boardValue > bestMove.boardValue)
+
+        if
+        (opponentBestMove.boardValue > bestMove.boardValue ||
+        (opponentBestMove.boardValue > oldBoardValue) ||
+        (opponentBestMove.boardValue > opponentBestMoveRightNow.boardValue)
         ) {
-          // const futureMoves = opponentBestMove.futureMoves;
-          // futureMoves.push(opponentBestMove);
+          const futureMoves = [].concat(opponentBestMove.futureMoves);
+          opponentBestMove.futureMoves = null;
+          futureMoves.push(opponentBestMove);
           bestMove = {
-            move, boardValue: opponentBestMove.boardValue, oldBoardValue,
+            move: ChessBoard.formatMoveObject(move), boardValue: opponentBestMove.boardValue, oldBoardValue, finalBoardValue: opponentBestMove.finalBoardValue, depth, color, futureMoves,
           };
         }
-      } else if (boardValue > bestMove.boardValue) {
+      } else if (depth === 0 && boardValue > bestMove.boardValue) {
         bestMove = {
-          move, boardValue, oldBoardValue,
+          move: ChessBoard.formatMoveObject(move), boardValue, oldBoardValue, color, depth, futureMoves: [], finalBoardValue: boardValue,
         };
       }
     });
@@ -224,6 +218,13 @@ module.exports = class ChessBoard {
     });
 
     return moves;
+  }
+
+  static formatMoveObject(move) {
+    const xCoord = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const yCoord = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+    return `${xCoord[move.from.x]}${yCoord[move.from.y]}-${xCoord[move.to.x]}${yCoord[move.to.y]}`;
   }
 
   isValidCell(loc) {

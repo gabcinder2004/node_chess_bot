@@ -11,24 +11,8 @@ const ChessBoard = require('../models/chessBoard');
 exports.getMove = async (req, res, next) => {
   try {
     // Parse FEN
-    const { fen } = req.body;
-    const gameState = chess.fenToPosition(fen);
-
-    // Build board from FEN
-    // gameState.board = chessBoardService.buildBoardFromGameState(gameState.board);
-
-    const board = new ChessBoard(gameState);
-
-    const bestMove = board.determineBestMove(3, gameState.turn, true);
-
-    // For each possible move:
-    // Are we checked?
-    // Can we check them?
-    // If we make the move, what is the best move opponent can make?
-    // Compare boardvalues after opponent makes a move
-
-
-    // Minimax tree
+    const { fen, depth } = req.body;
+    const bestMove = this.getBestMove(fen, depth - 1);
 
     res.status(httpStatus.OK);
     res.json({
@@ -37,5 +21,11 @@ exports.getMove = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+exports.getBestMove = (fen, depth) => {
+  const gameState = chess.fenToPosition(fen);
+  const board = new ChessBoard(gameState);
+  return board.determineBestMove(depth, gameState.turn, true);
 };
 
