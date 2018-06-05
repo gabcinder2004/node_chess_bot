@@ -9,7 +9,7 @@ const controller = require('../../controllers/chess.controller');
 
 describe('Chess Game Scenarios', () => {
   describe('White', () => {
-    const depth = 3;
+    const depth = 17;
     const testCases = [
       { id: 1, fen: '1N1kr3/1pr5/3p1pB1/P3N3/4R3/2p5/K6P/1n4q1 w - - 0 1', result: 'e5-c6' },
       { id: 2, fen: '1N1kB3/1pr5/3p1p2/P3N3/4R3/2p5/K6q/1n6 w - - 0 1', result: 'a2-b3' },
@@ -25,7 +25,8 @@ describe('Chess Game Scenarios', () => {
     _.forEach(testCases, (testCase) => {
       it(`Test Case: ${testCase.id}`, () => {
         const actualMove = controller.getBestMove(testCase.fen, depth);
-        expect(actualMove.move).to.equal(testCase.result);
+        console.log(actualMove);
+        expect(actualMove).to.equal(testCase.result);
       });
     });
   });

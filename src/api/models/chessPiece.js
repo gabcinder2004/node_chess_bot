@@ -22,13 +22,14 @@ module.exports = class ChessPiece {
   }
 
   static getPieceValue(type) {
+    const colorValue = this.color === 'W' ? 1 : -1;
     switch (type) {
-      case 'P': return 100;
-      case 'N': return 300;
-      case 'B': return 300;
-      case 'R': return 500;
-      case 'Q': return 900;
-      case 'K': return 9000;
+      case 'P': return 100 * colorValue;
+      case 'N': return 300 * colorValue;
+      case 'B': return 300 * colorValue;
+      case 'R': return 500 * colorValue;
+      case 'Q': return 900 * colorValue;
+      case 'K': return 9000 * colorValue;
       default:
         throw new Error('Unknown Piece Type');
     }

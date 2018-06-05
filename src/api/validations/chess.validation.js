@@ -5,7 +5,7 @@ module.exports = {
   getMove: {
     body: {
       fen: Joi.string().required(),
-      gameid: Joi.number().required(),
+      gameid: Joi.number(),
     },
   },
 };

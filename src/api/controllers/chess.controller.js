@@ -4,6 +4,7 @@ const httpStatus = require('http-status');
 const chess = require('chess-rules');
 
 const ChessBoard = require('../models/chessBoard');
+const aiMinimax = require('../services/minimax.ai');
 /**
  * Get next move
  * @public
@@ -12,11 +13,11 @@ exports.getMove = async (req, res, next) => {
   try {
     // Parse FEN
     const { fen, depth } = req.body;
-    const bestMove = this.getBestMove(fen, depth - 1);
+    const move = this.getBestMove(fen, depth - 1);
 
     res.status(httpStatus.OK);
     res.json({
-      message: 'Success!', bestMove,
+      message: 'Success!', move,
     });
   } catch (error) {
     next(error);
@@ -26,6 +27,7 @@ exports.getMove = async (req, res, next) => {
 exports.getBestMove = (fen, depth) => {
   const gameState = chess.fenToPosition(fen);
   const board = new ChessBoard(gameState);
-  return board.determineBestMove(depth, gameState.turn, true);
+  // return board.determineBestMove(depth, gameState.turn, true);
+  return aiMinimax.execute(board, depth);
 };
 

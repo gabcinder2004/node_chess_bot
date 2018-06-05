@@ -3,19 +3,13 @@ const ChessPiece = require('../models/chessPiece');
 const PieceInfo = require('../models/pieceInfo');
 
 module.exports = class ChessBoard {
-  constructor(gameState, cloneBoard) {
-    // if (cloneBoard) {
-    //   this.currentTurnState = _.cloneDeep(cloneBoard.currentTurnState);
-    //   this.cleanClonedChessPieces();
-    //   this.currentTurn = cloneBoard.currentTurn;
-    //   this.check = cloneBoard.check;
-    //   this.castlingFlags = cloneBoard.castlingFlags;
-    // } else {
+  constructor(gameState) {
     this.buildBoardFromGameState(gameState.board);
     this.currentTurn = gameState.turn;
-    this.check = gameState.check ? gameState.turn : null;
     this.castlingFlags = gameState.castlingFlags;
-    // }
+
+    this.pieces = [];
+    this.getAllPieces();
     this.xMinBound = 0;
     this.xMaxBound = 7;
     this.yMinBound = 0;
@@ -28,13 +22,19 @@ module.exports = class ChessBoard {
     return clonedBoard;
   }
 
-  cleanClonedChessPieces() {
+  getAllPieces() {
     _.forEach(this.currentTurnState, (cells) => {
       _.forEach(cells, (cell) => {
         if (cell.piece) {
-          cell.piece.availableMoves = [];
+          this.pieces.push(cell.piece);
         }
       });
+    });
+  }
+
+  cleanClonedChessPieces() {
+    _.forEach(this.pieces, (piece) => {
+      piece.availableMoves = [];
     });
   }
 
@@ -52,7 +52,6 @@ module.exports = class ChessBoard {
     toCell.piece.y = move.to.y;
     fromCell.piece = null;
     this.changeTurn();
-    this.check = null;
   }
 
   changeTurn() {
@@ -129,17 +128,14 @@ module.exports = class ChessBoard {
     return cellEmpty;
   }
 
-  getBoardValueForColor(color) {
+  getBoardValue() {
     let boardValue = 0;
+
     _.forEach(this.currentTurnState, (cells) => {
       _.forEach(cells, (cell) => {
         if (cell.piece) {
-          const pieceLocationValue = PieceInfo.getTileValues(cell.piece.type, cell.piece.color)[cell.location.x][cell.location.y];
-          let pieceValue = 0 + ChessPiece.getPieceValue(cell.piece.type);
-
-          if (cell.piece.color !== color) {
-            pieceValue *= -1;
-          }
+          const pieceLocationValue = PieceInfo.getTileValues(cell.piece.type, cell.piece.color)[cell.piece.x][cell.piece.y];
+          const pieceValue = pieceLocationValue + ChessPiece.getPieceValue(cell.piece.type);
 
           boardValue += pieceValue;
         }
@@ -149,82 +145,17 @@ module.exports = class ChessBoard {
     return boardValue;
   }
 
-  determineBestMove(depth, color, onceFlag) {
-    const moves = this.getAllAvailableMovesForColor(color);
-    const oldBoardValue = this.getBoardValueForColor(color);
-    let opponentBestMoveRightNow = null;
-    if (onceFlag) {
-      opponentBestMoveRightNow = this.determineBestMove(0, color === 'W' ? 'B' : 'W', false);
-      opponentBestMoveRightNow.boardValue *= -1;
-    }
-    let bestMove = { move: null, oldBoardValue, boardValue: -99999 };
-    _.forEach(moves, (move) => {
-      const cloneBoard = this.clone();
-
-      cloneBoard.makeMove(move);
-      const boardValue = cloneBoard.getBoardValueForColor(color);
-
-      // if (depth === 0 && move.movingPiece === 'K' && onceFlag) {
-      //   const opponentBestMove = cloneBoard.determineBestMove(0, color === 'W' ? 'B' : 'W', false);
-      //   if (opponentBestMove.boardValue * -1 < boardValue) {
-      //     return;
-      //   }
-      // }
-
-      if (depth !== 0 && boardValue >= bestMove.boardValue && boardValue >= oldBoardValue && boardValue >= opponentBestMoveRightNow.boardValue) {
-        const opponentBestMove = cloneBoard.determineBestMove(depth - 1, color === 'W' ? 'B' : 'W', true);
-
-        opponentBestMove.boardValue *= -1;
-
-        if
-        (opponentBestMove.boardValue > bestMove.boardValue ||
-        (opponentBestMove.boardValue > oldBoardValue) ||
-        (opponentBestMove.boardValue > opponentBestMoveRightNow.boardValue)
-        ) {
-          const futureMoves = [].concat(opponentBestMove.futureMoves);
-          opponentBestMove.futureMoves = null;
-          futureMoves.push(opponentBestMove);
-          bestMove = {
-            move: ChessBoard.formatMoveObject(move), boardValue: opponentBestMove.boardValue, oldBoardValue, finalBoardValue: opponentBestMove.finalBoardValue, depth, color, futureMoves,
-          };
-        }
-      } else if (depth === 0 && boardValue > bestMove.boardValue) {
-        bestMove = {
-          move: ChessBoard.formatMoveObject(move), boardValue, oldBoardValue, color, depth, futureMoves: [], finalBoardValue: boardValue,
-        };
-      }
-    });
-
-    return bestMove;
-  }
-
   getAllAvailableMovesForColor(color) {
     let moves = [];
 
-    _.forEach(this.currentTurnState, (cells) => {
-      _.forEach(cells, (cell) => {
-        if (cell.piece && cell.piece.color === color) {
-          // const checkObj = this.kingIsChecked();
-          // const weAreChecked = checkObj.check && checkObj.color === color;
-          // if (weAreChecked && cell.piece.type === 'K') {
-          //   cell.piece.getAvailableMoves(this);
-          //   moves = moves.concat(cell.piece.availableMoves);
-          // } else if (!weAreChecked) {
-          cell.piece.getAvailableMoves(this);
-          moves = moves.concat(cell.piece.availableMoves);
-          // }
-        }
-      });
+    _.forEach(this.pieces, (piece) => {
+      if (piece.color === color) {
+        piece.getAvailableMoves(this);
+        moves = moves.concat(piece.availableMoves);
+      }
     });
 
     return moves;
-  }
-
-  static formatMoveObject(move) {
-    const xCoord = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    const yCoord = ['1', '2', '3', '4', '5', '6', '7', '8'];
-
-    return `${xCoord[move.from.x]}${yCoord[move.from.y]}-${xCoord[move.to.x]}${yCoord[move.to.y]}`;
   }
 
   isValidCell(loc) {
