@@ -12,12 +12,15 @@ const aiMinimax = require('../services/minimax.ai');
 exports.getMove = async (req, res, next) => {
   try {
     // Parse FEN
-    const { fen, depth } = req.body;
-    const move = this.getBestMove(fen, depth - 1);
+    let { Fen, depth } = req.body;
+    if (!depth) {
+      depth = 4;
+    }
+    const move = this.getBestMove(Fen, depth - 1);
 
     res.status(httpStatus.OK);
     res.json({
-      message: 'Success!', move: move.bestMove, boardValue: move.finalBoardValue,
+      move: move.bestMove, boardValue: move.finalBoardValue,
     });
   } catch (error) {
     next(error);

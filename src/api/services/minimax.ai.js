@@ -48,6 +48,12 @@ const formatMoveObject = (move) => {
 const min = (board, depth, color) => {
   const bValue = board.getBoardValue();
   if (depth === 0 || Math.abs(bValue) > 10000) {
+    if (depth !== 0) {
+      bValue = bValue < -10000 ?
+        bValue - (depth * 1000) :
+        bValue + (depth * 1000);
+    }
+
     return bValue;
   }
 
@@ -70,8 +76,14 @@ const min = (board, depth, color) => {
 
 // If White Player
 const max = (board, depth, color) => {
-  const bValue = board.getBoardValue();
+  let bValue = board.getBoardValue();
   if (depth === 0 || Math.abs(bValue) > 10000) {
+    if (depth !== 0) {
+      bValue = bValue < -10000 ?
+        bValue - (depth * 1000) :
+        bValue + (depth * 1000);
+    }
+
     return bValue;
   }
 
