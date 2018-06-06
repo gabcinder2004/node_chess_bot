@@ -8,6 +8,7 @@ module.exports = class ChessBoard {
     this.currentTurn = gameState.turn;
     this.castlingFlags = gameState.castlingFlags;
 
+    this.moves = [];
     this.pieces = [];
     this.getAllPieces();
     this.xMinBound = 0;
@@ -38,6 +39,10 @@ module.exports = class ChessBoard {
     });
   }
 
+  getLastMove() {
+    return _.last(this.moves);
+  }
+
   makeMove(move) {
     const fromCell = this.getCell(move.from);
     const toCell = this.getCell(move.to);
@@ -51,6 +56,8 @@ module.exports = class ChessBoard {
     toCell.piece.x = move.to.x;
     toCell.piece.y = move.to.y;
     fromCell.piece = null;
+
+    this.moves.push(move);
     this.changeTurn();
   }
 
@@ -135,7 +142,7 @@ module.exports = class ChessBoard {
       _.forEach(cells, (cell) => {
         if (cell.piece) {
           const pieceLocationValue = PieceInfo.getTileValues(cell.piece.type, cell.piece.color)[cell.piece.x][cell.piece.y];
-          const pieceValue = pieceLocationValue + ChessPiece.getPieceValue(cell.piece.type);
+          const pieceValue = pieceLocationValue + ChessPiece.getPieceValue(cell.piece.type, cell.piece.color);
 
           boardValue += pieceValue;
         }
@@ -148,11 +155,13 @@ module.exports = class ChessBoard {
   getAllAvailableMovesForColor(color) {
     let moves = [];
 
-    _.forEach(this.pieces, (piece) => {
-      if (piece.color === color) {
-        piece.getAvailableMoves(this);
-        moves = moves.concat(piece.availableMoves);
-      }
+    _.forEach(this.currentTurnState, (cells) => {
+      _.forEach(cells, (cell) => {
+        if (cell.piece && cell.piece.color === color) {
+          cell.piece.getAvailableMoves(this);
+          moves = moves.concat(cell.piece.availableMoves);
+        }
+      });
     });
 
     return moves;

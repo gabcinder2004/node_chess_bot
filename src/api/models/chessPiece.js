@@ -21,15 +21,15 @@ module.exports = class ChessPiece {
     return { x: newX, y: newY };
   }
 
-  static getPieceValue(type) {
-    const colorValue = this.color === 'W' ? 1 : -1;
+  static getPieceValue(type, color) {
+    const colorValue = color === 'W' ? 1 : -1;
     switch (type) {
       case 'P': return 100 * colorValue;
       case 'N': return 300 * colorValue;
       case 'B': return 300 * colorValue;
       case 'R': return 500 * colorValue;
       case 'Q': return 900 * colorValue;
-      case 'K': return 9000 * colorValue;
+      case 'K': return 15000 * colorValue;
       default:
         throw new Error('Unknown Piece Type');
     }
@@ -46,7 +46,7 @@ module.exports = class ChessPiece {
       && board.getCell(newLocation, board.currentTurnState).piece.color !== this.color);
     if (newLocationHasEnemy) {
       this.availableMoves.push({
-        from: curLocation, to: newLocation, moveType: 'KILL', movingPiece: this.type,
+        from: curLocation, to: newLocation, moveType: 'KILL', movingPiece: this,
       });
     }
   }
@@ -80,9 +80,9 @@ module.exports = class ChessPiece {
     }
 
     // If cell is empty or has an enemy on it, it is an available move
-    if (cellValid && (cellEmpty || cellHasEnemy)) {
+    if (cellValid && (cellEmpty || (cellHasEnemy && this.type !== 'P'))) {
       this.availableMoves.push({
-        from: { x: this.x, y: this.y }, to: newLocation, moveType: cellHasEnemy ? 'KILL' : 'MOVE', movingPiece: this.type,
+        from: { x: this.x, y: this.y }, to: newLocation, moveType: cellHasEnemy ? 'KILL' : 'MOVE', movingPiece: this,
       });
 
       if (!moveOnce && !cellHasEnemy) {

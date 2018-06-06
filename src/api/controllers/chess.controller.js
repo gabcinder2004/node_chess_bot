@@ -17,7 +17,7 @@ exports.getMove = async (req, res, next) => {
 
     res.status(httpStatus.OK);
     res.json({
-      message: 'Success!', move,
+      message: 'Success!', move: move.bestMove, boardValue: move.finalBoardValue,
     });
   } catch (error) {
     next(error);
